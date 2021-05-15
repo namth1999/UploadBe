@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,6 +15,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import javax.activation.FileTypeMap;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.stream.Collectors;
 
 @Controller
@@ -35,9 +40,9 @@ public class FileController {
         return "listFiles";
     }
 
-    @GetMapping("/download/{filePath:.+}/{filename:.+}")
+    @GetMapping("/download")
     @ResponseBody
-    public ResponseEntity<Resource> downloadFile(@PathVariable String filename, @PathVariable String filePath) {
+    public ResponseEntity<Resource> downloadFile(@RequestParam String filename, @RequestParam String filePath) {
 
         Resource resource = storageService.loadAsResource(filename, filePath);
 
@@ -47,9 +52,9 @@ public class FileController {
                 .body(resource);
     }
 
-    @DeleteMapping("/delete/{filePath:.+}/{filename:.+}")
+    @DeleteMapping("/delete")
     @ResponseBody
-    public ResponseEntity<String> deleteFile(@PathVariable String filename, @PathVariable String filePath) {
+    public ResponseEntity<String> deleteFile(@RequestParam String filename, @RequestParam String filePath) {
         try {
             boolean deletable = storageService.delete(filename, filePath);
             return ResponseEntity.status(HttpStatus.OK).body("" + deletable);
@@ -69,6 +74,12 @@ public class FileController {
         } catch (Exception e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
+    }
+
+    @GetMapping("preview")
+    public ResponseEntity<byte[]> getImage(@RequestParam String path) throws IOException {
+        File img = new File("uploads/" + path);
+        return ResponseEntity.ok().contentType(MediaType.valueOf(FileTypeMap.getDefaultFileTypeMap().getContentType(img))).body(Files.readAllBytes(img.toPath()));
     }
 
 }

@@ -119,11 +119,7 @@ public class FileSystemStorageService implements StorageService {
             Files.createDirectories(this.rootLocation.resolve(filePath));
         }
         String name = store(file, filePath);
-        String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/download/")
-                .path(filePath+"/")
-                .path(name)
-                .toUriString();
+        String uri = ServletUriComponentsBuilder.fromCurrentContextPath().toUriString() + "/preview?path=" + filePath + "/" + file.getOriginalFilename();
 
         return new FileResponse(name, uri, file.getContentType(), file.getSize());
 

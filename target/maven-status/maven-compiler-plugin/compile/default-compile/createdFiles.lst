@@ -1,6 +1,5 @@
 com/example/uploadbe/storage/StorageService.class
 com/example/uploadbe/commons/CustomMultipartFile.class
-com/example/uploadbe/config/KeycloakAdapterConfig.class
 com/example/uploadbe/UploadBeApplication.class
 com/example/uploadbe/storage/StorageProperties.class
 com/example/uploadbe/storage/StorageException.class

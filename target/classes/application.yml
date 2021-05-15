@@ -1,28 +1,16 @@
-keycloak:
-    auth-server-url: http://localhost:8080/auth
-    bearer-only: true
-    credentials:
-        secret: 62564a15-92fc-42cf-ba2f-910d62c6e7c5
-    public-client: true
-    realm: test-keycloak
-    resource: demo-app-be
-    ssl-required: external
-    use-resource-role-mappings: true
+#keycloak:
+#    auth-server-url: http://localhost:8080/auth
+#    bearer-only: true
+#    credentials:
+#        secret: 62564a15-92fc-42cf-ba2f-910d62c6e7c5
+#    public-client: true
+#    realm: test-keycloak
+#    resource: demo-app-be
+#    ssl-required: external
+#    use-resource-role-mappings: true
 server:
     port: 8084
 spring:
-    datasource:
-        password: Fuck1245!
-        url: jdbc:mysql://localhost:3307/TEST_KEYCLOACK
-        username: root
-    jpa:
-        generate-ddl: true
-        hibernate:
-            ddl-auto: update
-        show-sql: true
-    rest:
-        endpoints:
-            file-upload: http://localhost:8084
     servlet:
         multipart:
             max-file-size: 10MB
