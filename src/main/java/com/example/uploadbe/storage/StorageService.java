@@ -12,18 +12,18 @@ public interface StorageService {
 
     void init();
 
-    String store(MultipartFile file);
+    String store(MultipartFile file, String filePath);
 
     Stream<Path> loadAll();
 
     Path load(String filename);
 
-    Resource loadAsResource(String filename);
+    Resource loadAsResource(String filename, String filePath);
 
-    boolean delete(String filename) throws IOException;
+    boolean delete(String filename, String filePath) throws IOException;
 
     void deleteAll();
 
-    FileResponse storev2(MultipartFile file);
+    FileResponse storev2(MultipartFile file, String filePath) throws IOException;
 
 }

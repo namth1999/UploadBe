@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import javax.annotation.PostConstruct;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -32,22 +32,15 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    @PostConstruct
     public void init() {
-        try {
-            Files.createDirectories(rootLocation);
-        } catch (IOException e) {
-            throw new StorageException("Could not initialize storage location", e);
-        }
     }
 
     @Override
-    public String store(MultipartFile file) {
-        if (file.isEmpty() || file.getOriginalFilename() == null){
+    public String store(MultipartFile file, String filePath) {
+        if (file.isEmpty() || file.getOriginalFilename() == null) {
             throw new StorageException("File is empty");
         }
         String filename = StringUtils.cleanPath(file.getOriginalFilename());
-        System.out.println(filename);
         try {
             if (file.isEmpty()) {
                 throw new StorageException("Failed to store empty file " + filename);
@@ -59,11 +52,10 @@ public class FileSystemStorageService implements StorageService {
                                 + filename);
             }
             try (InputStream inputStream = file.getInputStream()) {
-                Files.copy(inputStream, this.rootLocation.resolve(filename),
+                Files.copy(inputStream, this.rootLocation.resolve(filePath + "/" + filename),
                         StandardCopyOption.REPLACE_EXISTING);
             }
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new StorageException("Failed to store file " + filename, e);
         }
 
@@ -76,8 +68,7 @@ public class FileSystemStorageService implements StorageService {
             return Files.walk(this.rootLocation, 1)
                     .filter(path -> !path.equals(this.rootLocation))
                     .map(this.rootLocation::relativize);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new StorageException("Failed to read stored files", e);
         }
 
@@ -89,29 +80,26 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public Resource loadAsResource(String filename) {
+    public Resource loadAsResource(String filename, String filePath) {
         try {
-            System.out.println(filename);
-            Path file = load(filename);
+            Path file = load(filePath + "/" + filename);
             Resource resource = new UrlResource(file.toUri());
             System.out.println(file.toUri());
             if (resource.exists() || resource.isReadable()) {
                 return resource;
-            }
-            else {
+            } else {
                 throw new FileNotFoundException(
                         "Could not read file: " + filename);
             }
-        }
-        catch (MalformedURLException e) {
+        } catch (MalformedURLException e) {
             throw new FileNotFoundException("Could not read file: " + filename, e);
         }
     }
 
     @Override
-    public boolean delete(String filename) {
+    public boolean delete(String filename, String filePath) {
         try {
-            Path file = load(filename);
+            Path file = load(filePath + "/" + filename);
             return Files.deleteIfExists(file);
         } catch (IOException e) {
             throw new StorageException("Failed to read stored files", e);
@@ -125,14 +113,19 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public FileResponse storev2(MultipartFile file) {
-        String name = store(file);
+    public FileResponse storev2(MultipartFile file, String filePath) throws IOException {
+        File directory = new File(this.rootLocation.resolve(filePath).toString());
+        if (!directory.exists()) {
+            Files.createDirectories(this.rootLocation.resolve(filePath));
+        }
+        String name = store(file, filePath);
         String uri = ServletUriComponentsBuilder.fromCurrentContextPath()
                 .path("/download/")
+                .path(filePath+"/")
                 .path(name)
                 .toUriString();
 
-
         return new FileResponse(name, uri, file.getContentType(), file.getSize());
+
     }
 }

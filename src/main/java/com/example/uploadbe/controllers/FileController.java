@@ -2,6 +2,7 @@ package com.example.uploadbe.controllers;
 
 import com.example.uploadbe.commons.FileResponse;
 import com.example.uploadbe.storage.FileSystemStorageService;
+import com.example.uploadbe.storage.StorageException;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -34,11 +35,11 @@ public class FileController {
         return "listFiles";
     }
 
-    @GetMapping("/download/{filename:.+}")
+    @GetMapping("/download/{filePath:.+}/{filename:.+}")
     @ResponseBody
-    public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filename, @PathVariable String filePath) {
 
-        Resource resource = storageService.loadAsResource(filename);
+        Resource resource = storageService.loadAsResource(filename, filePath);
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
@@ -46,22 +47,28 @@ public class FileController {
                 .body(resource);
     }
 
-    @DeleteMapping("/delete/{filename:.+}")
+    @DeleteMapping("/delete/{filePath:.+}/{filename:.+}")
     @ResponseBody
-    public ResponseEntity<String> deleteFile(@PathVariable String filename) {
+    public ResponseEntity<String> deleteFile(@PathVariable String filename, @PathVariable String filePath) {
         try {
-            boolean deletable = storageService.delete(filename);
+            boolean deletable = storageService.delete(filename, filePath);
             return ResponseEntity.status(HttpStatus.OK).body("" + deletable);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.OK).body(e.getMessage());
+            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
     @PostMapping("/upload-file")
     @ResponseBody
-    public FileResponse uploadFile(@RequestParam("file") MultipartFile file) {
-        FileResponse fileResponse = storageService.storev2(file);
-        return fileResponse;
+    public ResponseEntity<FileResponse> uploadFile(@RequestParam("file") MultipartFile file, @RequestParam("path") String filePath) {
+        try {
+            FileResponse fileResponse = storageService.storev2(file, filePath);
+            return ResponseEntity.status(HttpStatus.OK).body(fileResponse);
+        } catch (StorageException e) {
+            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
 }
